@@ -1,5 +1,6 @@
 {ipcRenderer} = require 'electron'
 path = require 'path'
+fs = require 'fs-plus'
 {Disposable, CompositeDisposable} = require 'event-kit'
 Grim = require 'grim'
 scrollbarStyle = require 'scrollbar-style'
@@ -44,10 +45,15 @@ class WorkspaceElement extends HTMLElement
     @subscriptions.add @config.onDidChange 'editor.lineHeight', @updateGlobalTextEditorStyleSheet.bind(this)
 
   updateGlobalTextEditorStyleSheet: ->
+    fontFamily = @config.get('editor.fontFamily')
+    # TODO: There is a bug in how some emojis (e.g. ❤️) are rendered on OSX.
+    # This workaround should be removed once we update to Chromium 51, where the
+    # problem was fixed.
+    fontFamily += ', "Apple Color Emoji"' if process.platform is 'darwin'
     styleSheetSource = """
       atom-text-editor {
         font-size: #{@config.get('editor.fontSize')}px;
-        font-family: #{@config.get('editor.fontFamily')};
+        font-family: #{fontFamily};
         line-height: #{@config.get('editor.lineHeight')};
       }
     """
@@ -117,6 +123,12 @@ class WorkspaceElement extends HTMLElement
       [projectPath] = @project.relativizePath(activePath)
     else
       [projectPath] = @project.getPaths()
-    ipcRenderer.send('run-package-specs', path.join(projectPath, 'spec')) if projectPath
+    if projectPath
+      specPath = path.join(projectPath, 'spec')
+      testPath = path.join(projectPath, 'test')
+      if not fs.existsSync(specPath) and fs.existsSync(testPath)
+        specPath = testPath
+
+      ipcRenderer.send('run-package-specs', specPath)
 
 module.exports = WorkspaceElement = document.registerElement 'atom-workspace', prototype: WorkspaceElement.prototype

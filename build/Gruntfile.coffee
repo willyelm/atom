@@ -57,7 +57,7 @@ module.exports = (grunt) ->
     homeDir = process.env.USERPROFILE
     contentsDir = shellAppDir
     appDir = path.join(shellAppDir, 'resources', 'app')
-    installDir ?= path.join(process.env.ProgramFiles, appName)
+    installDir ?= path.join(process.env.LOCALAPPDATA, appName, 'app-dev')
     killCommand = 'taskkill /F /IM atom.exe'
   else if process.platform is 'darwin'
     homeDir = process.env.HOME
@@ -172,6 +172,8 @@ module.exports = (grunt) ->
             dest: path.join(appDir, jsFile)
           })
 
+  windowsInstallerConfig =
+
   grunt.initConfig
     pkg: grunt.file.readJSON('package.json')
 
@@ -285,18 +287,24 @@ module.exports = (grunt) ->
   ciTasks.push('dump-symbols') if process.platform is 'darwin'
   ciTasks.push('set-version', 'check-licenses', 'lint', 'generate-asar')
   ciTasks.push('mkdeb') if process.platform is 'linux'
-  ciTasks.push('codesign:exe') if process.platform is 'win32' and not process.env.CI
-  ciTasks.push('create-windows-installer:installer') if process.platform is 'win32'
+  ciTasks.push('mktar') if process.platform is 'linux'
   ciTasks.push('test') if process.platform is 'darwin'
-  ciTasks.push('codesign:installer') if process.platform is 'win32' and not process.env.CI
   ciTasks.push('codesign:app') if process.platform is 'darwin' and not process.env.CI
+  if process.platform is 'win32'
+    ciTasks.push('codesign:exe') if process.env.JANKY_SIGNTOOL
+    ciTasks.push('codesign:installer-deferred') if not process.env.JANKY_SIGNTOOL
+    ciTasks.push('create-windows-installer:installer')
+    ciTasks.push('codesign:installer') if process.env.JANKY_SIGNTOOL
+    ciTasks.push('codesign:cleanup')
   ciTasks.push('publish-build') unless process.env.CI
+
   grunt.registerTask('ci', ciTasks)
 
   defaultTasks = ['download-electron', 'download-electron-chromedriver', 'build', 'set-version', 'generate-asar']
   unless process.platform is 'linux' or grunt.option('no-install')
     defaultTasks.push 'install'
   grunt.registerTask('default', defaultTasks)
+  grunt.registerTask('build-and-sign', ['download-electron', 'download-electron-chromedriver', 'build', 'set-version', 'generate-asar', 'codesign:app', 'install'])
 
 getDefaultChannelAndReleaseBranch = (version) ->
   if version.match(/dev/) or isBuildingPR()

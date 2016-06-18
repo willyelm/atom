@@ -1,12 +1,10 @@
 autoUpdater = null
-_ = require 'underscore-plus'
-Config = require '../config'
 {EventEmitter} = require 'events'
 path = require 'path'
 
 IdleState = 'idle'
 CheckingState = 'checking'
-DownladingState = 'downloading'
+DownloadingState = 'downloading'
 UpdateAvailableState = 'update-available'
 NoUpdateAvailableState = 'no-update-available'
 UnsupportedState = 'unsupported'
@@ -14,15 +12,12 @@ ErrorState = 'error'
 
 module.exports =
 class AutoUpdateManager
-  _.extend @prototype, EventEmitter.prototype
+  Object.assign @prototype, EventEmitter.prototype
 
-  constructor: (@version, @testMode, resourcePath) ->
+  constructor: (@version, @testMode, resourcePath, @config) ->
     @state = IdleState
     @iconPath = path.resolve(__dirname, '..', '..', 'resources', 'atom.png')
     @feedUrl = "https://atom.io/api/updates?version=#{@version}"
-    @config = new Config({configDirPath: process.env.ATOM_HOME, resourcePath, enablePersistence: true})
-    @config.setSchema null, {type: 'object', properties: _.clone(require('../config-schema'))}
-    @config.load()
     process.nextTick => @setupAutoUpdater()
 
   setupAutoUpdater: ->
@@ -32,7 +27,8 @@ class AutoUpdateManager
       {autoUpdater} = require 'electron'
 
     autoUpdater.on 'error', (event, message) =>
-      @setState(ErrorState)
+      @setState(ErrorState, message)
+      @emitWindowEvent('update-error')
       console.error "Error Downloading Update: #{message}"
 
     autoUpdater.setFeedURL @feedUrl
@@ -46,7 +42,7 @@ class AutoUpdateManager
       @emitWindowEvent('update-not-available')
 
     autoUpdater.on 'update-available', =>
-      @setState(DownladingState)
+      @setState(DownloadingState)
       # We use sendMessage to send an event called 'update-available' in 'update-downloaded'
       # once the update download is complete. This mismatch between the electron
       # autoUpdater events is unfortunate but in the interest of not changing the
@@ -82,13 +78,17 @@ class AutoUpdateManager
       atomWindow.sendMessage(eventName, payload)
     return
 
-  setState: (state) ->
+  setState: (state, errorMessage) ->
     return if @state is state
     @state = state
+    @errorMessage = errorMessage
     @emit 'state-changed', @state
 
   getState: ->
     @state
+
+  getErrorMessage: ->
+    @errorMessage
 
   scheduleUpdateCheck: ->
     # Only schedule update check periodically if running in release version and

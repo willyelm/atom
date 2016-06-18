@@ -87,7 +87,7 @@ describe "Project", ->
 
       runs ->
         bufferA = atom.project.getBuffers()[0]
-        layerA = bufferA.addMarkerLayer(maintainHistory: true)
+        layerA = bufferA.addMarkerLayer(persistent: true)
         markerA = layerA.markPosition([0, 3])
 
         notQuittingProject = new Project({notificationManager: atom.notifications, packageManager: atom.packages, confirm: atom.confirm})
@@ -111,6 +111,28 @@ describe "Project", ->
       runs ->
         editor.saveAs(tempFile)
         expect(atom.project.getPaths()[0]).toBe path.dirname(tempFile)
+
+  describe "before and after saving a buffer", ->
+    [buffer] = []
+    beforeEach ->
+      waitsForPromise ->
+        atom.project.bufferForPath(path.join(__dirname, 'fixtures', 'sample.js')).then (o) ->
+          buffer = o
+          buffer.retain()
+
+    afterEach ->
+      buffer.release()
+
+    it "emits save events on the main process", ->
+      spyOn(atom.project.applicationDelegate, 'emitDidSavePath')
+      spyOn(atom.project.applicationDelegate, 'emitWillSavePath')
+
+      buffer.save()
+
+      expect(atom.project.applicationDelegate.emitDidSavePath.calls.length).toBe(1)
+      expect(atom.project.applicationDelegate.emitDidSavePath).toHaveBeenCalledWith(buffer.getPath())
+      expect(atom.project.applicationDelegate.emitWillSavePath.calls.length).toBe(1)
+      expect(atom.project.applicationDelegate.emitWillSavePath).toHaveBeenCalledWith(buffer.getPath())
 
   describe "when a watch error is thrown from the TextBuffer", ->
     editor = null
@@ -526,7 +548,7 @@ describe "Project", ->
         expect(atom.project.getDirectories()[1].contains(inputPath)).toBe true
         expect(atom.project.relativizePath(inputPath)).toEqual [
           atom.project.getPaths()[1],
-          'somewhere/something.txt'
+          path.join('somewhere', 'something.txt')
         ]
 
   describe ".contains(path)", ->

@@ -25,6 +25,10 @@ atom-workspace {
   background-color: @app-background-color;
   font-family: @font-family;
 
+  atom-workspace-axis {
+    position: relative;
+  }
+
   atom-workspace-axis.horizontal {
     display: flex;
     flex: 1;
@@ -34,5 +38,15 @@ atom-workspace {
     display: flex;
     flex: 1;
     flex-direction: column;
+    min-width: 0;
+  }
+}
+// titleBarStyle: 'hidden-inset'
+.platform-darwin .tab-bar {
+  padding-left: 70px;
+  height: 36px;
+  .tab {
+    height: 36px;
+    line-height: 36px;
   }
 }
