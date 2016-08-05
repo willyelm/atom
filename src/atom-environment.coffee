@@ -924,6 +924,8 @@ class AtomEnvironment extends Model
 
   setBodyPlatformClass: ->
     @document.body.classList.add("platform-#{process.platform}")
+    if process.platform is 'darwin'
+      @document.body.setAttribute("title-bar-style", "hidden-inset")
 
   setAutoHideMenuBar: (autoHide) ->
     @applicationDelegate.setAutoHideWindowMenuBar(autoHide)
