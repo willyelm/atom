@@ -1,11 +1,12 @@
 # Like sands through the hourglass, so are the days of our lives.
 module.exports = ({blobStore}) ->
-  updateProcessEnv = require('./update-process-env')
+  {updateProcessEnv} = require('./update-process-env')
   path = require 'path'
   require './window'
   {getWindowLoadSettings} = require './window-load-settings-helpers'
   {ipcRenderer} = require 'electron'
-  {resourcePath, isSpec, devMode, env} = getWindowLoadSettings()
+  {resourcePath, devMode, env} = getWindowLoadSettings()
+  require '../src/electron-shims'
 
   updateProcessEnv(env)
 

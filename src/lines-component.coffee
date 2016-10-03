@@ -15,13 +15,11 @@ DummyLineNode.children[1].textContent = '我'
 DummyLineNode.children[2].textContent = 'ﾊ'
 DummyLineNode.children[3].textContent = '세'
 
-RangeForMeasurement = document.createRange()
-
 module.exports =
 class LinesComponent extends TiledComponent
   placeholderTextDiv: null
 
-  constructor: ({@presenter, @useShadowDOM, @domElementPool, @assert, @grammars}) ->
+  constructor: ({@presenter, @domElementPool, @assert}) ->
     @domNode = document.createElement('div')
     @domNode.classList.add('lines')
     @tilesNode = document.createElement("div")
@@ -34,10 +32,9 @@ class LinesComponent extends TiledComponent
     @cursorsComponent = new CursorsComponent
     @domNode.appendChild(@cursorsComponent.getDomNode())
 
-    if @useShadowDOM
-      insertionPoint = document.createElement('content')
-      insertionPoint.setAttribute('select', '.overlayer')
-      @domNode.appendChild(insertionPoint)
+    insertionPoint = document.createElement('content')
+    insertionPoint.setAttribute('select', '.overlayer')
+    @domNode.appendChild(insertionPoint)
 
   getDomNode: ->
     @domNode
@@ -66,7 +63,7 @@ class LinesComponent extends TiledComponent
 
     @cursorsComponent.updateSync(state)
 
-  buildComponentForTile: (id) -> new LinesTileComponent({id, @presenter, @domElementPool, @assert, @grammars})
+  buildComponentForTile: (id) -> new LinesTileComponent({id, @presenter, @domElementPool, @assert})
 
   buildEmptyState: ->
     {tiles: {}}
@@ -78,7 +75,6 @@ class LinesComponent extends TiledComponent
 
   measureLineHeightAndDefaultCharWidth: ->
     @domNode.appendChild(DummyLineNode)
-    textNode = DummyLineNode.firstChild.childNodes[0]
 
     lineHeightInPixels = DummyLineNode.getBoundingClientRect().height
     defaultCharWidth = DummyLineNode.children[0].getBoundingClientRect().width

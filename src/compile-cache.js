@@ -43,11 +43,11 @@ exports.addPathToCache = function (filePath, atomHome) {
       CSON = require('season')
       CSON.setCacheDir(this.getCacheDirectory())
     }
-    CSON.readFileSync(filePath)
+    return CSON.readFileSync(filePath)
   } else {
     var compiler = COMPILERS[extension]
     if (compiler) {
-      compileFileAtPath(compiler, filePath, extension)
+      return compileFileAtPath(compiler, filePath, extension)
     }
   }
 }
@@ -74,7 +74,7 @@ function compileFileAtPath (compiler, filePath, extension) {
       cacheStats[extension].hits++
     } else {
       cacheStats[extension].misses++
-      compiledCode = addSourceURL(compiler.compile(sourceCode, filePath), filePath)
+      compiledCode = compiler.compile(sourceCode, filePath)
       writeCachedJavascript(cachePath, compiledCode)
     }
     return compiledCode
@@ -95,13 +95,6 @@ function readCachedJavascript (relativeCachePath) {
 function writeCachedJavascript (relativeCachePath, code) {
   var cachePath = path.join(cacheDirectory, relativeCachePath)
   fs.writeFileSync(cachePath, code, 'utf8')
-}
-
-function addSourceURL (jsCode, filePath) {
-  if (process.platform === 'win32') {
-    filePath = '/' + path.resolve(filePath).replace(/\\/g, '/')
-  }
-  return jsCode + '\n' + '//# sourceURL=' + encodeURI(filePath) + '\n'
 }
 
 var INLINE_SOURCE_MAP_REGEXP = /\/\/[#@]\s*sourceMappingURL=([^'"\n]+)\s*$/mg

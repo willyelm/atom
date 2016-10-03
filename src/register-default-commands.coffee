@@ -1,4 +1,5 @@
 {ipcRenderer} = require 'electron'
+Grim = require 'grim'
 
 module.exports = ({commandRegistry, commandInstaller, config, notificationManager, project, clipboard}) ->
   commandRegistry.add 'atom-workspace',
@@ -235,7 +236,7 @@ stopEventPropagationAndGroupUndo = (config, commandListeners) ->
       newCommandListeners[commandName] = (event) ->
         event.stopPropagation()
         model = @getModel()
-        model.transact config.get('editor.undoGroupingInterval'), ->
+        model.transact model.getUndoGroupingInterval(), ->
           commandListener.call(model, event)
   newCommandListeners
 

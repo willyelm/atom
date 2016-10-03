@@ -1,9 +1,4 @@
-_ = require 'underscore-plus'
-
 HighlightsComponent = require './highlights-component'
-AcceptFilter = {acceptNode: -> NodeFilter.FILTER_ACCEPT}
-TokenTextEscapeRegex = /[&"'<>]/g
-MaxTokenLength = 20000
 ZERO_WIDTH_NBSP = '\ufeff'
 
 cloneObject = (object) ->
@@ -13,7 +8,7 @@ cloneObject = (object) ->
 
 module.exports =
 class LinesTileComponent
-  constructor: ({@presenter, @id, @domElementPool, @assert, grammars}) ->
+  constructor: ({@presenter, @id, @domElementPool, @assert}) ->
     @measuredLines = new Set
     @lineNodesByLineId = {}
     @screenRowsByLineId = {}
@@ -201,7 +196,6 @@ class LinesTileComponent
         lineNode.classList.add(decorationClass)
 
     textNodes = []
-    lineLength = 0
     startIndex = 0
     openScopeNode = lineNode
     for tagCode in tagCodes when tagCode isnt 0

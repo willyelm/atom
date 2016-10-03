@@ -284,7 +284,7 @@ class PackageManager
         packagePaths.push(packagePath) if fs.isDirectorySync(packagePath)
 
     packagesPath = path.join(@resourcePath, 'node_modules')
-    for packageName, packageVersion of @getPackageDependencies()
+    for packageName of @getPackageDependencies()
       packagePath = path.join(packagesPath, packageName)
       packagePaths.push(packagePath) if fs.isDirectorySync(packagePath)
 
@@ -486,15 +486,15 @@ class PackageManager
   # Deactivate all packages
   deactivatePackages: ->
     @config.transact =>
-      @deactivatePackage(pack.name) for pack in @getLoadedPackages()
+      @deactivatePackage(pack.name, true) for pack in @getLoadedPackages()
       return
     @unobserveDisabledPackages()
     @unobservePackagesWithKeymapsDisabled()
 
   # Deactivate the package with the given name
-  deactivatePackage: (name) ->
+  deactivatePackage: (name, suppressSerialization) ->
     pack = @getLoadedPackage(name)
-    @serializePackage(pack) if @isPackageActive(pack.name)
+    @serializePackage(pack) if not suppressSerialization and @isPackageActive(pack.name)
     pack.deactivate()
     delete @activePackages[pack.name]
     delete @activatingPackages[pack.name]
