@@ -21,6 +21,8 @@ module.exports = ({blobStore}) ->
     {getWindowLoadSettings} = require './window-load-settings-helpers'
     AtomEnvironment = require '../src/atom-environment'
     ApplicationDelegate = require '../src/application-delegate'
+    Clipboard = require '../src/clipboard'
+    TextEditor = require '../src/text-editor'
     require '../src/electron-shims'
 
     {testRunnerPath, legacyTestRunnerPath, headless, logFile, testPaths} = getWindowLoadSettings()
@@ -35,9 +37,11 @@ module.exports = ({blobStore}) ->
       if (event.metaKey or event.ctrlKey) and event.keyCode is 82
         ipcHelpers.call('window-method', 'reload')
 
-      # Toggle Dev Tools: cmd-alt-i / ctrl-alt-i
-      if (event.metaKey or event.ctrlKey) and event.altKey and event.keyCode is 73
-        ipcHelpers.call('window-method', 'toggleDevTools')
+      # Toggle Dev Tools: cmd-alt-i (Mac) / ctrl-shift-i (Linux/Windows)
+      if event.keyCode is 73 and (
+        (process.platform is 'darwin' and event.metaKey and event.altKey) or
+        (process.platform isnt 'darwin' and event.ctrlKey and event.shiftKey))
+          ipcHelpers.call('window-method', 'toggleDevTools')
 
       # Close: cmd-w / ctrl-w
       if (event.metaKey or event.ctrlKey) and event.keyCode is 87
@@ -56,11 +60,15 @@ module.exports = ({blobStore}) ->
 
     document.title = "Spec Suite"
 
+    clipboard = new Clipboard
+    TextEditor.setClipboard(clipboard)
+
     testRunner = require(testRunnerPath)
     legacyTestRunner = require(legacyTestRunnerPath)
     buildDefaultApplicationDelegate = -> new ApplicationDelegate()
     buildAtomEnvironment = (params) ->
       params = cloneObject(params)
+      params.clipboard = clipboard unless params.hasOwnProperty("clipboard")
       params.blobStore = blobStore unless params.hasOwnProperty("blobStore")
       params.onlyLoadBaseStyleSheets = true unless params.hasOwnProperty("onlyLoadBaseStyleSheets")
       new AtomEnvironment(params)
