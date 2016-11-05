@@ -36,6 +36,19 @@ To also install the newly built application, use `script\build --create-windows-
 * `--create-windows-installer`: creates an `.msi`, an `.exe` and a `.nupkg` installer in the `out/` directory.
 * `--install`: installs the application in `%LOCALAPPDATA%\Atom\app-dev\`.
 
+### Running tests
+
+In order to run tests from command line you need `apm`, available after you install Atom or after you build from source. If you installed it, run the following commands (assuming `C:\atom` is the root of your Atom repository):
+
+```bash
+cd C:\atom
+apm test
+```
+
+When building Atom from source, the `apm` command is not added to the system path by default. In this case, you can either add it yourself or explicitly list the complete path in previous commands. The default install location is `%LOCALAPPDATA%\Atom\app-dev\resources\cli\`.
+
+**NOTE**: Please keep in mind that there are still some tests that don't pass on Windows.
+
 ## Troubleshooting
 
 ### Common Errors

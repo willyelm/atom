@@ -4335,6 +4335,13 @@ describe "TextEditor", ->
           editor.toggleLineCommentsInSelection()
           expect(buffer.lineForRow(4)).toBe "    while(items.length > 0) {"
 
+      it "does nothing for empty lines and null grammar", ->
+        runs ->
+          editor.setGrammar(atom.grammars.grammarForScopeName('text.plain.null-grammar'))
+          editor.setCursorBufferPosition([10, 0])
+          editor.toggleLineCommentsInSelection()
+          expect(editor.buffer.lineForRow(10)).toBe ""
+
       it "uncomments when the line lacks the trailing whitespace in the comment regex", ->
         editor.setCursorBufferPosition([10, 0])
         editor.toggleLineCommentsInSelection()
@@ -5173,11 +5180,15 @@ describe "TextEditor", ->
       expect(editor.getSelectedBufferRange()).toEqual [[13, 0], [14, 2]]
 
   describe ".shouldPromptToSave()", ->
-    it "returns false when an edit session's buffer is in use by more than one session", ->
+    it "returns true when buffer changed", ->
       jasmine.unspy(editor, 'shouldPromptToSave')
       expect(editor.shouldPromptToSave()).toBeFalsy()
       buffer.setText('changed')
       expect(editor.shouldPromptToSave()).toBeTruthy()
+
+    it "returns false when an edit session's buffer is in use by more than one session", ->
+      jasmine.unspy(editor, 'shouldPromptToSave')
+      buffer.setText('changed')
 
       editor2 = null
       waitsForPromise ->
@@ -5188,6 +5199,16 @@ describe "TextEditor", ->
         expect(editor.shouldPromptToSave()).toBeFalsy()
         editor2.destroy()
         expect(editor.shouldPromptToSave()).toBeTruthy()
+
+    it "returns false when close of a window requested and edit session opened inside project", ->
+      jasmine.unspy(editor, 'shouldPromptToSave')
+      buffer.setText('changed')
+      expect(editor.shouldPromptToSave(windowCloseRequested: true, projectHasPaths: true)).toBeFalsy()
+
+    it "returns true when close of a window requested and edit session opened without project", ->
+      jasmine.unspy(editor, 'shouldPromptToSave')
+      buffer.setText('changed')
+      expect(editor.shouldPromptToSave(windowCloseRequested: true, projectHasPaths: false)).toBeTruthy()
 
   describe "when the editor contains surrogate pair characters", ->
     it "correctly backspaces over them", ->
