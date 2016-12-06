@@ -34,7 +34,7 @@ class AtomApplication
     unless options.socketPath?
       if process.platform is 'win32'
         userNameSafe = new Buffer(process.env.USERNAME).toString('base64')
-        options.socketPath = "\\\\.\\pipe\\atom-#{options.version}-#{userNameSafe}-sock"
+        options.socketPath = "\\\\.\\pipe\\atom-#{options.version}-#{userNameSafe}-#{process.arch}-sock"
       else
         options.socketPath = path.join(os.tmpdir(), "atom-#{options.version}-#{process.env.USER}.sock")
 
@@ -509,7 +509,7 @@ class AtomApplication
   openPaths: ({initialPaths, pathsToOpen, executedFrom, pidToKillWhenClosed, newWindow, devMode, safeMode, windowDimensions, profileStartup, window, clearWindowState, addToLastWindow, env}={}) ->
     if not pathsToOpen? or pathsToOpen.length is 0
       return
-
+    env = process.env unless env?
     devMode = Boolean(devMode)
     safeMode = Boolean(safeMode)
     clearWindowState = Boolean(clearWindowState)

@@ -85,6 +85,8 @@ const configSchema = {
         default: 'utf8',
         enum: [
           'cp437',
+          'cp850',
+          'cp866',
           'eucjp',
           'euckr',
           'gbk',
@@ -117,8 +119,7 @@ const configSchema = {
           'windows1255',
           'windows1256',
           'windows1257',
-          'windows1258',
-          'windows866'
+          'windows1258'
         ]
       },
       openEmptyEditorOnStart: {
